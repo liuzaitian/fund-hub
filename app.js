@@ -2,73 +2,125 @@
    Fund Hub - 基金实时估值查询
    ══════════════════════════════════════════════════════ */
 
-// ── Curated ETF List (支付宝可购买) ──────────────────
+// ── Curated ETF/Index Fund List (对齐养基宝板块分类) ──
 const ETF_LIST = [
-  // 宽基指数
-  { code: '000961', name: '天弘沪深300ETF联接A', sector: '宽基指数' },
-  { code: '001051', name: '华夏上证50ETF联接A', sector: '宽基指数' },
-  { code: '000962', name: '天弘中证500指数A', sector: '宽基指数' },
-  { code: '007856', name: '天弘创业板ETF联接A', sector: '宽基指数' },
-  { code: '011612', name: '华夏科创50ETF联接A', sector: '宽基指数' },
-  { code: '012768', name: '天弘中证1000指数A', sector: '宽基指数' },
-  { code: '001552', name: '天弘中证100指数A', sector: '宽基指数' },
-  { code: '005918', name: '天弘中证800ETF联接A', sector: '宽基指数' },
+  // ━━ 宽基指数 ━━
+  { code: '000961', name: '天弘沪深300ETF联接A', sector: '沪深300' },
+  { code: '110020', name: '易方达沪深300ETF联接A', sector: '沪深300' },
+  { code: '270010', name: '广发沪深300ETF联接A', sector: '沪深300' },
 
-  // 科技
-  { code: '012478', name: '天弘中证芯片产业指数A', sector: '科技' },
-  { code: '008887', name: '华夏中证半导体芯片ETF联接A', sector: '科技' },
-  { code: '011613', name: '天弘中证人工智能主题A', sector: '科技' },
-  { code: '007873', name: '广发中证全指通信设备ETF联接A', sector: '科技' },
-  { code: '001513', name: '易方达信息产业混合', sector: '科技' },
-  { code: '015046', name: '天弘中证云计算与大数据A', sector: '科技' },
-  { code: '012479', name: '天弘中证电子ETF联接A', sector: '科技' },
+  { code: '001051', name: '华夏上证50ETF联接A', sector: '上证50' },
+  { code: '110003', name: '易方达上证50指数A', sector: '上证50' },
 
-  // 消费
+  { code: '000962', name: '天弘中证500指数A', sector: '中证500' },
+  { code: '007028', name: '易方达中证500ETF联接A', sector: '中证500' },
+
+  { code: '007856', name: '天弘创业板ETF联接A', sector: '创业板' },
+  { code: '110026', name: '易方达创业板ETF联接A', sector: '创业板' },
+
+  { code: '011612', name: '华夏科创50ETF联接A', sector: '科创50' },
+  { code: '011609', name: '易方达科创50ETF联接A', sector: '科创50' },
+
+  { code: '012768', name: '天弘中证1000指数A', sector: '中证1000' },
+  { code: '014045', name: '易方达中证1000ETF联接A', sector: '中证1000' },
+
+  { code: '019475', name: '天弘中证A500指数A', sector: '中证A500' },
+  { code: '021209', name: '易方达中证A500ETF联接A', sector: '中证A500' },
+
+  // ━━ 行业-科技 ━━
+  { code: '012478', name: '天弘中证芯片产业指数A', sector: '半导体/芯片' },
+  { code: '008887', name: '华夏中证半导体芯片ETF联接A', sector: '半导体/芯片' },
+  { code: '007300', name: '国泰CES半导体芯片ETF联接A', sector: '半导体/芯片' },
+
+  { code: '011613', name: '天弘中证人工智能主题A', sector: '人工智能' },
+  { code: '015046', name: '天弘中证云计算与大数据A', sector: '人工智能' },
+
+  { code: '012479', name: '天弘中证电子ETF联接A', sector: '电子' },
+  { code: '001513', name: '易方达信息产业混合', sector: '电子' },
+
+  { code: '007873', name: '广发中证全指通信设备ETF联接A', sector: '通信' },
+
+  // ━━ 行业-消费 ━━
+  { code: '001632', name: '天弘中证食品饮料指数A', sector: '食品饮料' },
+  { code: '003096', name: '中欧消费主题股票A', sector: '食品饮料' },
+  { code: '000248', name: '汇添富中证主要消费ETF联接A', sector: '食品饮料' },
+
   { code: '110022', name: '易方达消费行业股票', sector: '消费' },
-  { code: '001632', name: '天弘中证食品饮料指数A', sector: '消费' },
-  { code: '000248', name: '汇添富中证主要消费ETF联接A', sector: '消费' },
-  { code: '007380', name: '广发中证全指家电ETF联接A', sector: '消费' },
+  { code: '012863', name: '天弘中证内地消费主题A', sector: '消费' },
 
-  // 医药
+  { code: '007380', name: '广发中证全指家电ETF联接A', sector: '家电' },
+
+  // ━━ 行业-医药 ━━
   { code: '001180', name: '广发医药卫生联接A', sector: '医药' },
   { code: '000059', name: '国联安中证医药100指数A', sector: '医药' },
   { code: '011608', name: '天弘中证医药100A', sector: '医药' },
-  { code: '501009', name: '汇添富中证生物科技指数A', sector: '医药' },
-  { code: '013403', name: '天弘中证创新药产业A', sector: '医药' },
 
-  // 金融
-  { code: '001594', name: '天弘中证银行指数A', sector: '金融' },
-  { code: '004069', name: '南方中证银行ETF联接A', sector: '金融' },
-  { code: '004070', name: '南方中证全指证券ETF联接A', sector: '金融' },
-  { code: '001552', name: '天弘中证保险指数A', sector: '金融' },
+  { code: '013403', name: '天弘中证创新药产业A', sector: '创新药' },
+  { code: '501009', name: '汇添富中证生物科技指数A', sector: '创新药' },
 
-  // 新能源
-  { code: '007380', name: '广发中证新能源ETF联接A', sector: '新能源' },
-  { code: '012480', name: '天弘中证光伏产业指数A', sector: '新能源' },
-  { code: '013091', name: '天弘中证新能源汽车指数A', sector: '新能源' },
+  // ━━ 行业-金融 ━━
+  { code: '001594', name: '天弘中证银行指数A', sector: '银行' },
+  { code: '004069', name: '南方中证银行ETF联接A', sector: '银行' },
+  { code: '001595', name: '天弘中证全指证券ETF联接A', sector: '银行' },
+
+  { code: '004070', name: '南方中证全指证券ETF联接A', sector: '证券' },
+  { code: '005241', name: '华宝中证全指证券ETF联接A', sector: '证券' },
+
+  { code: '001552', name: '天弘中证保险指数A', sector: '非银金融' },
+
+  // ━━ 行业-新能源 ━━
+  { code: '010150', name: '华夏中证新能源ETF联接A', sector: '新能源' },
   { code: '012481', name: '天弘中证锂电池主题A', sector: '新能源' },
 
-  // 军工
+  { code: '012480', name: '天弘中证光伏产业指数A', sector: '光伏' },
+  { code: '011102', name: '天弘中证光伏产业指数C', sector: '光伏' },
+
+  { code: '013091', name: '天弘中证新能源汽车指数A', sector: '新能车' },
+  { code: '013092', name: '天弘中证新能源汽车指数C', sector: '新能车' },
+
+  // ━━ 行业-制造/周期 ━━
   { code: '005693', name: '天弘中证军工龙头ETF联接A', sector: '军工' },
   { code: '012477', name: '天弘中证国防ETF联接A', sector: '军工' },
 
-  // 跨境
-  { code: '270042', name: '广发纳斯达克100指数A', sector: '跨境' },
-  { code: '050025', name: '博时标普500ETF联接A', sector: '跨境' },
-  { code: '000071', name: '华夏恒生ETF联接A', sector: '跨境' },
-  { code: '006327', name: '易方达中概互联50联接A', sector: '跨境' },
-  { code: '005241', name: '华宝中证全指证券ETF联接A', sector: '跨境' },
-  { code: '164906', name: '交银海外中国互联网指数', sector: '跨境' },
-  { code: '513520', name: '华夏日经225ETF联接A', sector: '跨境' },
+  { code: '161715', name: '招商中证白酒指数A', sector: '白酒' },
+  { code: '012414', name: '天弘中证白酒指数A', sector: '白酒' },
 
-  // 红利
+  { code: '161726', name: '招商中证煤炭等权指数A', sector: '煤炭' },
+
+  { code: '014832', name: '天弘中证有色金属指数A', sector: '有色金属' },
+  { code: '161028', name: '富国中证有色金属指数A', sector: '有色金属' },
+
+  { code: '008279', name: '天弘中证钢铁指数A', sector: '钢铁' },
+
+  { code: '160516', name: '博时中证基建指数A', sector: '基建' },
+
+  { code: '008282', name: '天弘中证化工ETF联接A', sector: '化工' },
+
+  { code: '001979', name: '招商中证国有企业改革指数A', sector: '央企国企' },
+
+  // ━━ 行业-地产 ━━
+  { code: '008088', name: '天弘中证房地产指数A', sector: '房地产' },
+  { code: '160218', name: '国泰国证房地产指数', sector: '房地产' },
+
+  // ━━ 跨境 ━━
+  { code: '270042', name: '广发纳斯达克100指数A', sector: '纳斯达克' },
+  { code: '050025', name: '博时标普500ETF联接A', sector: '标普500' },
+  { code: '000071', name: '华夏恒生ETF联接A', sector: '恒生指数' },
+  { code: '012348', name: '华夏恒生科技ETF联接A', sector: '恒生科技' },
+  { code: '013171', name: '天弘恒生科技指数A', sector: '恒生科技' },
+  { code: '006327', name: '易方达中概互联50联接A', sector: '中概互联' },
+  { code: '164906', name: '交银海外中国互联网指数', sector: '中概互联' },
+  { code: '513520', name: '华夏日经225ETF联接A', sector: '日经225' },
+  { code: '019736', name: '华安德国DAX ETF联接A', sector: '德国DAX' },
+
+  // ━━ 策略 ━━
   { code: '012708', name: '天弘中证红利低波动100A', sector: '红利' },
   { code: '008928', name: '华泰柏瑞红利低波ETF联接A', sector: '红利' },
   { code: '501029', name: '华泰柏瑞中证红利ETF联接A', sector: '红利' },
 
-  // 商品
-  { code: '002610', name: '博时黄金ETF联接A', sector: '商品' },
-  { code: '002611', name: '博时黄金ETF联接C', sector: '商品' },
+  // ━━ 商品 ━━
+  { code: '002610', name: '博时黄金ETF联接A', sector: '黄金' },
+  { code: '000217', name: '华安黄金易ETF联接A', sector: '黄金' },
   { code: '007937', name: '华夏豆粕ETF联接A', sector: '商品' },
 ];
 
@@ -81,6 +133,22 @@ const FUNDS = ETF_LIST.filter(f => {
 });
 
 const SECTORS = ['全部', ...new Set(FUNDS.map(f => f.sector))];
+
+// Sector grouping for tab navigation
+const SECTOR_GROUPS = [
+  { label: '全部', sectors: null },
+  { label: '宽基指数', sectors: ['沪深300', '上证50', '中证500', '创业板', '科创50', '中证1000', '中证A500'] },
+  { label: '科技', sectors: ['半导体/芯片', '人工智能', '电子', '通信'] },
+  { label: '消费', sectors: ['食品饮料', '消费', '家电', '白酒'] },
+  { label: '医药', sectors: ['医药', '创新药'] },
+  { label: '金融', sectors: ['银行', '证券', '非银金融'] },
+  { label: '新能源', sectors: ['新能源', '光伏', '新能车'] },
+  { label: '制造/周期', sectors: ['军工', '有色金属', '钢铁', '煤炭', '化工', '基建', '央企国企'] },
+  { label: '地产', sectors: ['房地产'] },
+  { label: '跨境', sectors: ['纳斯达克', '标普500', '恒生指数', '恒生科技', '中概互联', '日经225', '德国DAX'] },
+  { label: '策略', sectors: ['红利'] },
+  { label: '商品', sectors: ['黄金', '商品'] },
+];
 
 // ── State ─────────────────────────────────────────────
 const state = {
@@ -538,9 +606,9 @@ const App = {
   // ── Sector ────────────────────────────────────────
   renderSectorTabs() {
     const container = document.getElementById('sectorTabs');
-    container.innerHTML = SECTORS.map(s => {
-      const key = s === '全部' ? 'all' : s;
-      return `<button class="sector-tab ${key === 'all' ? 'active' : ''}" data-sector="${key}" onclick="App.switchSector('${key}')">${s}</button>`;
+    container.innerHTML = SECTOR_GROUPS.map(g => {
+      const key = g.sectors === null ? 'all' : g.label;
+      return `<button class="sector-tab ${key === 'all' ? 'active' : ''}" data-sector="${key}" onclick="App.switchSector('${key}')">${g.label}</button>`;
     }).join('');
   },
 
@@ -550,11 +618,20 @@ const App = {
     this.renderSectorGrid();
   },
 
+  getSectorFunds(sector) {
+    if (sector === 'all') return FUNDS;
+    // Check if it's a group label
+    const group = SECTOR_GROUPS.find(g => g.label === sector);
+    if (group && group.sectors) {
+      return FUNDS.filter(f => group.sectors.includes(f.sector));
+    }
+    // Direct sector match (from overview click)
+    return FUNDS.filter(f => f.sector === sector);
+  },
+
   renderSectorGrid() {
     const grid = document.getElementById('sectorGrid');
-    const filtered = state.currentSector === 'all'
-      ? FUNDS
-      : FUNDS.filter(f => f.sector === state.currentSector);
+    const filtered = this.getSectorFunds(state.currentSector);
 
     if (filtered.length === 0) {
       grid.innerHTML = '<div class="empty-hint">暂无该板块基金</div>';
@@ -647,11 +724,11 @@ const App = {
     const sectorStats = sectorNames.map(sector => {
       const funds = FUNDS.filter(f => f.sector === sector);
       const withData = funds.filter(f => state.fundData[f.code]);
-      if (withData.length === 0) return { sector, avg: 0, count: funds.length, loaded: 0 };
+      if (withData.length === 0) return { sector, avg: null, count: funds.length, loaded: 0 };
 
       const sum = withData.reduce((acc, f) => acc + (parseFloat(state.fundData[f.code].gszzl) || 0), 0);
       return { sector, avg: sum / withData.length, count: funds.length, loaded: withData.length };
-    });
+    }).filter(s => s.avg !== null);
 
     // Sort by average change descending
     sectorStats.sort((a, b) => b.avg - a.avg);
@@ -665,16 +742,30 @@ const App = {
       const barWidth = Math.abs(s.avg) / maxAbs * 100;
 
       return `
-        <div class="sector-bar-item" onclick="App.switchSector('${s.sector}')">
+        <div class="sector-bar-item" onclick="App.jumpToSector('${s.sector}')">
           <span class="sector-bar-name">${s.sector}</span>
           <div class="sector-bar-track">
             <div class="sector-bar-fill ${dir}" style="width:${barWidth}%"></div>
           </div>
           <span class="sector-bar-pct ${dir}">${sign}${s.avg.toFixed(2)}%</span>
-          <span class="sector-bar-count">${s.loaded}/${s.count}</span>
+          <span class="sector-bar-count">${s.count}只</span>
         </div>
       `;
     }).join('');
+  },
+
+  jumpToSector(sector) {
+    // Find which group this sector belongs to and activate that tab
+    const group = SECTOR_GROUPS.find(g => g.sectors && g.sectors.includes(sector));
+    if (group) {
+      state.currentSector = group.label;
+      document.querySelectorAll('.sector-tab').forEach(t => t.classList.toggle('active', t.dataset.sector === group.label));
+    } else {
+      state.currentSector = sector;
+    }
+    this.renderSectorGrid();
+    // Scroll to the sector grid
+    document.getElementById('sectorGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
   },
 
   // ── Holdings (成分股) ───────────────────────────────
