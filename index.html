@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>基金实时估值 - Fund Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-mesh"></div>
+
+  <div id="app">
+    <!-- ══ Header ══ -->
+    <header class="header">
+      <div class="header-left">
+        <h1 class="logo">Fund<span class="logo-accent">Hub</span></h1>
+        <span class="logo-sub">基金实时估值查询</span>
+      </div>
+      <div class="header-right">
+        <div class="market-status" id="marketStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">检测中...</span>
+        </div>
+        <div class="auto-refresh">
+          <label class="toggle">
+            <input type="checkbox" id="autoRefresh" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label">自动刷新</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ══ Search ══ -->
+    <div class="search-section">
+      <div class="search-bar glass">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="输入基金代码或名称搜索, 如 110022、沪深300、芯片..." autocomplete="off">
+        <kbd class="search-hint">Enter</kbd>
+      </div>
+      <div class="search-results glass hidden" id="searchResults"></div>
+    </div>
+
+    <!-- ══ Watchlist ══ -->
+    <section class="watchlist-section" id="watchlistSection">
+      <div class="section-header">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          自选基金
+        </h2>
+        <div class="section-actions">
+          <button class="btn-sm" onclick="App.refreshWatchlist()">刷新</button>
+          <span class="update-time" id="watchlistTime"></span>
+        </div>
+      </div>
+      <div class="fund-grid" id="watchlistGrid">
+        <div class="empty-hint">点击搜索结果中的 ★ 添加自选基金</div>
+      </div>
+    </section>
+
+    <!-- ══ Sector Tabs ══ -->
+    <section class="sector-section">
+      <div class="section-header">
+        <h2>热门 ETF 基金</h2>
+        <span class="section-desc">支付宝可购买的 ETF 联接基金 / 指数基金</span>
+      </div>
+      <div class="sector-tabs" id="sectorTabs">
+        <button class="sector-tab active" data-sector="all" onclick="App.switchSector('all')">全部</button>
+      </div>
+      <div class="fund-grid" id="sectorGrid"></div>
+    </section>
+
+    <!-- ══ Footer ══ -->
+    <footer class="footer">
+      <p>数据来源: <a href="https://fund.eastmoney.com" target="_blank">天天基金</a> |
+         估值仅供参考, 以基金公司公布净值为准 |
+         本站不构成投资建议</p>
+    </footer>
+  </div>
+
+  <!-- Fund Detail Modal -->
+  <div class="modal-overlay hidden" id="modalOverlay" onclick="App.closeModal()">
+    <div class="modal glass" onclick="event.stopPropagation()">
+      <div class="modal-header" id="modalHeader"></div>
+      <div class="modal-body" id="modalBody"></div>
+      <button class="btn-close" onclick="App.closeModal()">✕</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
