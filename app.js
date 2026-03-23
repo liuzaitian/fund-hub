@@ -262,38 +262,52 @@ const SECTOR_GROUPS = [
 ];
 
 // ── Precious Metals (贵金属实时行情) ─────────────────
+// Sina finance codes: hf_XAU=伦敦金, hf_XAG=伦敦银, hf_GC=COMEX黄金, hf_SI=COMEX白银
+// Data format: [0]最新价, [1]买价, [2]卖价, [3]开盘, [4]最高, [5]最低, [6]时间, [7]昨收/昨结
 const METALS = [
-  { secid: '101.XAU_USD', name: '现货黄金', icon: '🥇', type: 'gold', unit: '美元/盎司', decimals: 2 },
-  { secid: '101.XAG_USD', name: '现货白银', icon: '🥈', type: 'silver', unit: '美元/盎司', decimals: 3 },
-  { secid: '118.AU9999', name: '黄金AU9999', icon: '🏅', type: 'gold', unit: '元/克', decimals: 2 },
-  { secid: '118.AG9999', name: '白银AG9999', icon: '⚪', type: 'silver', unit: '元/千克', decimals: 0 },
+  { code: 'hf_XAU', name: '现货黄金', icon: '🥇', type: 'gold', unit: '美元/盎司', decimals: 2 },
+  { code: 'hf_XAG', name: '现货白银', icon: '🥈', type: 'silver', unit: '美元/盎司', decimals: 3 },
+  { code: 'hf_GC',  name: 'COMEX黄金', icon: '🏅', type: 'gold', unit: '美元/盎司', decimals: 2 },
+  { code: 'hf_SI',  name: 'COMEX白银', icon: '⚪', type: 'silver', unit: '美元/盎司', decimals: 3 },
 ];
 
-let metalCallbackId = 0;
-
-function fetchMetalPrice(secid) {
+function fetchAllMetalPrices() {
   return new Promise((resolve) => {
-    const cbName = `metalCb_${++metalCallbackId}`;
     const script = document.createElement('script');
-    const timeout = setTimeout(() => { cleanup(); resolve(null); }, 8000);
+    const timeout = setTimeout(() => { cleanup(); resolve({}); }, 8000);
 
     function cleanup() {
       clearTimeout(timeout);
-      delete window[cbName];
       try { document.head.removeChild(script); } catch (e) {}
     }
 
-    window[cbName] = (data) => {
+    // Sina API sets window.hq_str_xxx variables directly
+    script.onload = () => {
       cleanup();
-      if (data && data.data) {
-        resolve(data.data);
-      } else {
-        resolve(null);
+      const result = {};
+      for (const metal of METALS) {
+        const raw = window[`hq_str_${metal.code}`];
+        if (raw) {
+          const f = raw.split(',');
+          result[metal.code] = {
+            price: parseFloat(f[0]) || 0,
+            open: parseFloat(f[3]) || 0,
+            high: parseFloat(f[4]) || 0,
+            low: parseFloat(f[5]) || 0,
+            time: f[6] || '',
+            prevClose: parseFloat(f[7]) || 0,
+            date: f[12] || '',
+          };
+        }
       }
+      resolve(result);
     };
 
-    script.onerror = () => { cleanup(); resolve(null); };
-    script.src = `https://push2.eastmoney.com/api/qt/stock/get?cb=${cbName}&fltt=2&invt=2&secid=${secid}&fields=f43,f44,f45,f46,f57,f58,f169,f170,f171&_=${Date.now()}`;
+    script.onerror = () => { cleanup(); resolve({}); };
+    const codes = METALS.map(m => m.code).join(',');
+    script.src = `https://hq.sinajs.cn/rn=${Date.now()}&list=${codes}`;
+    // Note: Sina may require Referer header, but script tags from browsers
+    // typically send the page URL as Referer which should work on GitHub Pages
     document.head.appendChild(script);
   });
 }
@@ -985,12 +999,8 @@ const App = {
 
   // ── Metal Prices (贵金属行情) ────────────────────────
   async loadMetalPrices() {
-    for (const metal of METALS) {
-      const data = await fetchMetalPrice(metal.secid);
-      if (data) {
-        state.metalData[metal.secid] = data;
-      }
-    }
+    const data = await fetchAllMetalPrices();
+    Object.assign(state.metalData, data);
     this.renderMetalCards();
     document.getElementById('metalTime').textContent = `更新于 ${new Date().toLocaleTimeString('zh-CN')}`;
   },
@@ -1003,7 +1013,7 @@ const App = {
     // Precious metals trade nearly 24h on weekdays, refresh every 15s
     setInterval(() => {
       const day = new Date().getDay();
-      if (day === 0 || day === 6) return; // Skip weekends
+      if (day === 0 || day === 6) return;
       if (!document.getElementById('autoRefresh').checked) return;
       this.loadMetalPrices();
     }, 15000);
@@ -1013,9 +1023,9 @@ const App = {
     const grid = document.getElementById('metalGrid');
 
     grid.innerHTML = METALS.map(metal => {
-      const data = state.metalData[metal.secid];
+      const data = state.metalData[metal.code];
 
-      if (!data || data.f43 === '-') {
+      if (!data || !data.price) {
         return `
           <div class="metal-card loading">
             <div class="metal-card-header">
@@ -1038,19 +1048,15 @@ const App = {
         `;
       }
 
-      const price = data.f43;   // 最新价
-      const high = data.f44;    // 最高
-      const low = data.f45;     // 最低
-      const open = data.f46;    // 今开
-      const change = data.f169; // 涨跌额
-      const pctVal = data.f170; // 涨跌幅
-      const prevClose = data.f171; // 昨收
+      const { price, open, high, low, prevClose } = data;
+      const change = price - prevClose;
+      const pctVal = prevClose ? (change / prevClose * 100) : 0;
 
-      const dir = pctVal > 0 ? 'up' : pctVal < 0 ? 'down' : '';
+      const dir = pctVal > 0.001 ? 'up' : pctVal < -0.001 ? 'down' : '';
       const sign = pctVal > 0 ? '+' : '';
       const d = metal.decimals;
 
-      const fmt = (v) => v != null && v !== '-' ? Number(v).toFixed(d) : '--';
+      const fmt = (v) => v ? v.toFixed(d) : '--';
 
       return `
         <div class="metal-card ${dir}">
@@ -1064,8 +1070,8 @@ const App = {
           <div class="metal-card-body">
             <div class="metal-card-price">${fmt(price)}</div>
             <div class="metal-card-change">
-              <div class="metal-card-pct">${sign}${Number(pctVal).toFixed(2)}%</div>
-              <div class="metal-card-diff">${sign}${fmt(change)}</div>
+              <div class="metal-card-pct">${sign}${pctVal.toFixed(2)}%</div>
+              <div class="metal-card-diff">${sign}${change.toFixed(d)}</div>
             </div>
           </div>
           <div class="metal-card-footer">
