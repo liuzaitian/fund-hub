@@ -552,6 +552,175 @@ a:hover { text-decoration: underline; }
 .modal-info-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 .modal-info-value { font-size: 14px; font-weight: 600; }
 
+/* ── Sector Overview (行情总览) ─────────────────────── */
+.sector-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sector-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.sector-bar-item:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-glass-hover);
+}
+
+.sector-bar-name {
+  width: 64px;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.sector-bar-track {
+  flex: 1;
+  height: 24px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sector-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 2px;
+}
+
+.sector-bar-fill.up { background: linear-gradient(90deg, rgba(239,68,68,0.3), rgba(239,68,68,0.6)); }
+.sector-bar-fill.down { background: linear-gradient(90deg, rgba(34,197,94,0.6), rgba(34,197,94,0.3)); }
+
+.sector-bar-pct {
+  width: 72px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+
+.sector-bar-pct.up { color: var(--up); }
+.sector-bar-pct.down { color: var(--down); }
+.sector-bar-pct.flat { color: var(--flat); }
+
+.sector-bar-count {
+  width: 40px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Modal Tabs ───────────────────────────────────── */
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0;
+}
+
+.modal-tab {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-family: inherit;
+}
+
+.modal-tab:hover { color: var(--text-primary); }
+.modal-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Holdings Table ───────────────────────────────── */
+.holdings-loading {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.holdings-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.holdings-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.holdings-table th:last-child,
+.holdings-table td:last-child {
+  text-align: right;
+}
+
+.holdings-table td {
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.holdings-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.holdings-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-muted);
+}
+
+.holdings-rank.top3 {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.holdings-name { font-weight: 500; }
+.holdings-code { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+.holdings-pct {
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+}
+
+.holdings-date {
+  text-align: center;
+  padding: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 /* ── Footer ────────────────────────────────────────── */
 .footer {
   text-align: center;

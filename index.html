@@ -46,6 +46,20 @@
       <div class="search-results glass hidden" id="searchResults"></div>
     </div>
 
+    <!-- ══ Sector Overview (行情总览) ══ -->
+    <section class="overview-section">
+      <div class="section-header">
+        <h2>
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M3 13h2v8H3v-8zm4-4h2v12H7V9zm4-4h2v16h-2V5zm4 8h2v8h-2v-8zm4-6h2v14h-2V7z"/></svg>
+          行情总览
+        </h2>
+        <span class="section-desc">板块平均涨跌幅排序</span>
+      </div>
+      <div class="sector-overview" id="sectorOverview">
+        <div class="empty-hint">数据加载中...</div>
+      </div>
+    </section>
+
     <!-- ══ Watchlist ══ -->
     <section class="watchlist-section" id="watchlistSection">
       <div class="section-header">
@@ -87,7 +101,12 @@
   <div class="modal-overlay hidden" id="modalOverlay" onclick="App.closeModal()">
     <div class="modal glass" onclick="event.stopPropagation()">
       <div class="modal-header" id="modalHeader"></div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="info" onclick="App.switchModalTab('info')">估值详情</button>
+        <button class="modal-tab" data-tab="holdings" onclick="App.switchModalTab('holdings')">成分股</button>
+      </div>
       <div class="modal-body" id="modalBody"></div>
+      <div class="modal-holdings hidden" id="modalHoldings"></div>
       <button class="btn-close" onclick="App.closeModal()">✕</button>
     </div>
   </div>

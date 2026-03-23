@@ -464,7 +464,40 @@ const App = {
       </div>
     `;
 
+    // Reset tabs to info
+    document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'info'));
+    document.getElementById('modalBody').classList.remove('hidden');
+    const holdingsEl = document.getElementById('modalHoldings');
+    holdingsEl.classList.add('hidden');
+    holdingsEl.innerHTML = '<div class="holdings-loading">加载成分股数据...</div>';
+
     document.getElementById('modalOverlay').classList.remove('hidden');
+
+    // Fetch holdings asynchronously
+    this.fetchHoldings(data.fundcode).then(result => {
+      if (!result || result.holdings.length === 0) {
+        holdingsEl.innerHTML = '<div class="holdings-loading">暂无成分股数据 (货币基金/债券基金可能无持仓信息)</div>';
+        return;
+      }
+      holdingsEl.innerHTML = `
+        <table class="holdings-table">
+          <thead>
+            <tr><th>序号</th><th>股票代码</th><th>股票名称</th><th>占比</th></tr>
+          </thead>
+          <tbody>
+            ${result.holdings.map((h, i) => `
+              <tr>
+                <td><span class="holdings-rank ${i < 3 ? 'top3' : ''}">${i + 1}</span></td>
+                <td><span class="holdings-code">${h.code}</span></td>
+                <td><span class="holdings-name">${h.name}</span></td>
+                <td><span class="holdings-pct">${h.pct}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ${result.date ? `<div class="holdings-date">数据来源: ${result.date} 基金季报</div>` : ''}
+      `;
+    });
   },
 
   closeModal() {
@@ -602,6 +635,112 @@ const App = {
   updateAllCards() {
     this.renderWatchlist();
     this.renderSectorGrid();
+    this.renderSectorOverview();
+  },
+
+  // ── Sector Overview (行情总览) ──────────────────────
+  renderSectorOverview() {
+    const container = document.getElementById('sectorOverview');
+    const sectorNames = SECTORS.filter(s => s !== '全部');
+
+    // Calculate average change per sector
+    const sectorStats = sectorNames.map(sector => {
+      const funds = FUNDS.filter(f => f.sector === sector);
+      const withData = funds.filter(f => state.fundData[f.code]);
+      if (withData.length === 0) return { sector, avg: 0, count: funds.length, loaded: 0 };
+
+      const sum = withData.reduce((acc, f) => acc + (parseFloat(state.fundData[f.code].gszzl) || 0), 0);
+      return { sector, avg: sum / withData.length, count: funds.length, loaded: withData.length };
+    });
+
+    // Sort by average change descending
+    sectorStats.sort((a, b) => b.avg - a.avg);
+
+    // Find max absolute value for bar scaling
+    const maxAbs = Math.max(...sectorStats.map(s => Math.abs(s.avg)), 0.01);
+
+    container.innerHTML = sectorStats.map(s => {
+      const dir = s.avg > 0.001 ? 'up' : s.avg < -0.001 ? 'down' : 'flat';
+      const sign = s.avg > 0 ? '+' : '';
+      const barWidth = Math.abs(s.avg) / maxAbs * 100;
+
+      return `
+        <div class="sector-bar-item" onclick="App.switchSector('${s.sector}')">
+          <span class="sector-bar-name">${s.sector}</span>
+          <div class="sector-bar-track">
+            <div class="sector-bar-fill ${dir}" style="width:${barWidth}%"></div>
+          </div>
+          <span class="sector-bar-pct ${dir}">${sign}${s.avg.toFixed(2)}%</span>
+          <span class="sector-bar-count">${s.loaded}/${s.count}</span>
+        </div>
+      `;
+    }).join('');
+  },
+
+  // ── Holdings (成分股) ───────────────────────────────
+  async fetchHoldings(code) {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      const timeout = setTimeout(() => { cleanup(); resolve(null); }, 8000);
+
+      function cleanup() {
+        clearTimeout(timeout);
+        try { document.head.removeChild(script); } catch (e) {}
+      }
+
+      // The API sets window.apidata
+      window.apidata = undefined;
+      script.onload = () => {
+        cleanup();
+        try {
+          const content = window.apidata?.content;
+          if (!content) { resolve(null); return; }
+          resolve(App.parseHoldingsHtml(content));
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      script.onerror = () => { cleanup(); resolve(null); };
+      script.src = `https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=${code}&topline=10&year=&month=&rt=${Date.now()}`;
+      document.head.appendChild(script);
+    });
+  },
+
+  parseHoldingsHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+
+    // Find the first table (latest quarter)
+    const table = div.querySelector('table');
+    if (!table) return null;
+
+    // Get the date from the header
+    const dateMatch = html.match(/(\d{4}年第\d季度)/);
+    const date = dateMatch ? dateMatch[1] : '';
+
+    const rows = table.querySelectorAll('tbody tr');
+    const holdings = [];
+
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        holdings.push({
+          rank: cells[0]?.textContent?.trim() || '',
+          code: cells[1]?.textContent?.trim() || '',
+          name: cells[2]?.textContent?.trim() || '',
+          pct: cells[6]?.textContent?.trim() || cells[4]?.textContent?.trim() || '',
+        });
+      }
+    });
+
+    return { date, holdings };
+  },
+
+  // ── Modal Tabs ──────────────────────────────────────
+  switchModalTab(tab) {
+    document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.getElementById('modalBody').classList.toggle('hidden', tab !== 'info');
+    document.getElementById('modalHoldings').classList.toggle('hidden', tab !== 'holdings');
   },
 };
 
