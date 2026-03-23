@@ -552,6 +552,152 @@ a:hover { text-decoration: underline; }
 .modal-info-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 .modal-info-value { font-size: 14px; font-weight: 600; }
 
+/* ── Metal Prices (贵金属行情) ─────────────────────── */
+.metal-section { margin-bottom: 32px; }
+
+.metal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.metal-card {
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.metal-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+  transition: var(--transition);
+}
+
+.metal-card.up::before { background: var(--up); }
+.metal-card.down::before { background: var(--down); }
+
+.metal-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.metal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.metal-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metal-card-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.metal-card-icon.gold { background: rgba(245,158,11,0.15); }
+.metal-card-icon.silver { background: rgba(148,163,184,0.15); }
+
+.metal-card-unit {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.04);
+}
+
+.metal-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.metal-card-price {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.metal-card.up .metal-card-price { color: var(--up); }
+.metal-card.down .metal-card-price { color: var(--down); }
+
+.metal-card-change { text-align: right; }
+
+.metal-card-pct {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.metal-card.up .metal-card-pct { color: var(--up); }
+.metal-card.down .metal-card-pct { color: var(--down); }
+
+.metal-card-diff {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.metal-card.up .metal-card-diff { color: rgba(239,68,68,0.6); }
+.metal-card.down .metal-card-diff { color: rgba(34,197,94,0.6); }
+
+.metal-card-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.metal-card-stat {
+  text-align: center;
+}
+
+.metal-card-stat-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.metal-card-stat-value {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.metal-card.loading .metal-card-price,
+.metal-card.loading .metal-card-pct {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  color: transparent;
+  border-radius: 4px;
+}
+
 /* ── Sector Overview (行情总览) ─────────────────────── */
 .overview-section { margin-bottom: 32px; }
 
@@ -742,6 +888,8 @@ a:hover { text-decoration: underline; }
   .header { flex-direction: column; align-items: flex-start; }
   .fund-grid { grid-template-columns: 1fr; }
   .fund-card-value { font-size: 22px; }
+  .metal-grid { grid-template-columns: 1fr 1fr; }
+  .metal-card-price { font-size: 22px; }
   .modal { padding: 24px; }
   .sector-overview { grid-template-columns: 1fr; }
 }

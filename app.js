@@ -261,10 +261,48 @@ const SECTOR_GROUPS = [
   { label: '黄金', sectors: ['黄金', '黄金股'] },
 ];
 
+// ── Precious Metals (贵金属实时行情) ─────────────────
+const METALS = [
+  { secid: '101.XAU_USD', name: '现货黄金', icon: '🥇', type: 'gold', unit: '美元/盎司', decimals: 2 },
+  { secid: '101.XAG_USD', name: '现货白银', icon: '🥈', type: 'silver', unit: '美元/盎司', decimals: 3 },
+  { secid: '118.AU9999', name: '黄金AU9999', icon: '🏅', type: 'gold', unit: '元/克', decimals: 2 },
+  { secid: '118.AG9999', name: '白银AG9999', icon: '⚪', type: 'silver', unit: '元/千克', decimals: 0 },
+];
+
+let metalCallbackId = 0;
+
+function fetchMetalPrice(secid) {
+  return new Promise((resolve) => {
+    const cbName = `metalCb_${++metalCallbackId}`;
+    const script = document.createElement('script');
+    const timeout = setTimeout(() => { cleanup(); resolve(null); }, 8000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.head.removeChild(script); } catch (e) {}
+    }
+
+    window[cbName] = (data) => {
+      cleanup();
+      if (data && data.data) {
+        resolve(data.data);
+      } else {
+        resolve(null);
+      }
+    };
+
+    script.onerror = () => { cleanup(); resolve(null); };
+    script.src = `https://push2.eastmoney.com/api/qt/stock/get?cb=${cbName}&fltt=2&invt=2&secid=${secid}&fields=f43,f44,f45,f46,f57,f58,f169,f170,f171&_=${Date.now()}`;
+    document.head.appendChild(script);
+  });
+}
+
 // ── State ─────────────────────────────────────────────
 const state = {
   watchlist: JSON.parse(localStorage.getItem('fund_watchlist') || '[]'),
   fundData: {},          // code -> estimation data
+  metalData: {},         // secid -> metal price data
   currentSector: 'all',
   refreshTimer: null,
   searchTimeout: null,
@@ -374,14 +412,21 @@ const App = {
     this.renderSectorTabs();
     this.renderSectorGrid();
     this.renderWatchlist();
+    this.renderMetalCards();
     this.updateMarketStatus();
     this.bindEvents();
+
+    // Load metal prices first (fast, only 4 requests)
+    await this.loadMetalPrices();
 
     // Initial data load
     await this.loadAllData();
 
     // Auto refresh
     this.startAutoRefresh();
+
+    // Metal prices refresh every 10s (markets trade nearly 24h)
+    this.startMetalAutoRefresh();
 
     // Update market status every minute
     setInterval(() => this.updateMarketStatus(), 60000);
@@ -936,6 +981,110 @@ const App = {
     });
 
     return { date, holdings };
+  },
+
+  // ── Metal Prices (贵金属行情) ────────────────────────
+  async loadMetalPrices() {
+    for (const metal of METALS) {
+      const data = await fetchMetalPrice(metal.secid);
+      if (data) {
+        state.metalData[metal.secid] = data;
+      }
+    }
+    this.renderMetalCards();
+    document.getElementById('metalTime').textContent = `更新于 ${new Date().toLocaleTimeString('zh-CN')}`;
+  },
+
+  async refreshMetals() {
+    await this.loadMetalPrices();
+  },
+
+  startMetalAutoRefresh() {
+    // Precious metals trade nearly 24h on weekdays, refresh every 15s
+    setInterval(() => {
+      const day = new Date().getDay();
+      if (day === 0 || day === 6) return; // Skip weekends
+      if (!document.getElementById('autoRefresh').checked) return;
+      this.loadMetalPrices();
+    }, 15000);
+  },
+
+  renderMetalCards() {
+    const grid = document.getElementById('metalGrid');
+
+    grid.innerHTML = METALS.map(metal => {
+      const data = state.metalData[metal.secid];
+
+      if (!data || data.f43 === '-') {
+        return `
+          <div class="metal-card loading">
+            <div class="metal-card-header">
+              <span class="metal-card-name">
+                <span class="metal-card-icon ${metal.type}">${metal.icon}</span>
+                ${metal.name}
+              </span>
+              <span class="metal-card-unit">${metal.unit}</span>
+            </div>
+            <div class="metal-card-body">
+              <div class="metal-card-price">--.--</div>
+              <div class="metal-card-change"><div class="metal-card-pct">--.--% </div></div>
+            </div>
+            <div class="metal-card-footer">
+              <div class="metal-card-stat"><div class="metal-card-stat-label">今开</div><div class="metal-card-stat-value">--</div></div>
+              <div class="metal-card-stat"><div class="metal-card-stat-label">最高</div><div class="metal-card-stat-value">--</div></div>
+              <div class="metal-card-stat"><div class="metal-card-stat-label">最低</div><div class="metal-card-stat-value">--</div></div>
+            </div>
+          </div>
+        `;
+      }
+
+      const price = data.f43;   // 最新价
+      const high = data.f44;    // 最高
+      const low = data.f45;     // 最低
+      const open = data.f46;    // 今开
+      const change = data.f169; // 涨跌额
+      const pctVal = data.f170; // 涨跌幅
+      const prevClose = data.f171; // 昨收
+
+      const dir = pctVal > 0 ? 'up' : pctVal < 0 ? 'down' : '';
+      const sign = pctVal > 0 ? '+' : '';
+      const d = metal.decimals;
+
+      const fmt = (v) => v != null && v !== '-' ? Number(v).toFixed(d) : '--';
+
+      return `
+        <div class="metal-card ${dir}">
+          <div class="metal-card-header">
+            <span class="metal-card-name">
+              <span class="metal-card-icon ${metal.type}">${metal.icon}</span>
+              ${metal.name}
+            </span>
+            <span class="metal-card-unit">${metal.unit}</span>
+          </div>
+          <div class="metal-card-body">
+            <div class="metal-card-price">${fmt(price)}</div>
+            <div class="metal-card-change">
+              <div class="metal-card-pct">${sign}${Number(pctVal).toFixed(2)}%</div>
+              <div class="metal-card-diff">${sign}${fmt(change)}</div>
+            </div>
+          </div>
+          <div class="metal-card-footer">
+            <div class="metal-card-stat">
+              <div class="metal-card-stat-label">今开</div>
+              <div class="metal-card-stat-value">${fmt(open)}</div>
+            </div>
+            <div class="metal-card-stat">
+              <div class="metal-card-stat-label">最高</div>
+              <div class="metal-card-stat-value">${fmt(high)}</div>
+            </div>
+            <div class="metal-card-stat">
+              <div class="metal-card-stat-label">最低</div>
+              <div class="metal-card-stat-value">${fmt(low)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
   },
 
   // ── Modal Tabs ──────────────────────────────────────
